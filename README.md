@@ -24,9 +24,9 @@ Cette version corrige l’erreur de déploiement Vercel `404: NOT_FOUND` en ajou
 
 - `api/index.ts` exporte l’app Express pour Vercel Serverless Functions
 - `api/[...all].ts` active le fallback catch-all
-- `vercel.json` réécrit `/(.*)` vers `/api/$1`
+- `vercel.json` force toutes les routes vers `api/index.ts` via `routes` + build `@vercel/node`
 
-Résultat: les routes `/`, `/event/2026`, `/trpc/*` ne tombent plus sur la page 404 plateforme.
+Résultat: toutes les URLs passent par **une seule fonction Node** (`api/index.ts`), ce qui évite les non-correspondances de réécriture (`/api/$1`) et supprime la 404 plateforme.
 
 ### 3) Sécurité runtime
 
