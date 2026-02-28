@@ -93,3 +93,11 @@ Si Vercel pointe encore sur un commit ancien (`2783bec Initialize repository`), 
 3. relancer un déploiement.
 
 Sinon Vercel continue d’afficher la 404 plateforme, même si le code est corrigé localement.
+
+
+## Vercel build note
+
+Le log fourni montre que Vercel build le commit ancien `2783bec` et exécute `vite build`.
+Cette révision ajoute `vite` + `build` script + `index.html` racine pour éviter l'erreur `vite: command not found` si ce preset est actif.
+
+Action requise côté Vercel: pointer la production branch sur le commit récent (ou merger vers `main`) puis redeployer.
