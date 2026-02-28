@@ -1,6 +1,6 @@
-# missetmisterdour — base fullstack sécurisée (v0.2)
+# missetmisterdour — base fullstack sécurisée (v0.3)
 
-Cette version corrige le principal manque de la première PR: **backend réellement exécutable** avec routes HTTP, middleware sécurité, tRPC et gestion 404 structurée.
+Cette version corrige l’erreur de déploiement Vercel `404: NOT_FOUND` en ajoutant une **entrée serverless Vercel** qui route toutes les URLs vers l’app Express.
 
 ## Stack
 
@@ -14,38 +14,46 @@ Cette version corrige le principal manque de la première PR: **backend réellem
 
 ### 1) Runtime serveur concret
 
-- Entrée serveur: `apps/server/src/index.ts`
+- Entrée serveur locale: `apps/server/src/index.ts`
 - Application Express: `apps/server/src/app.ts`
-- Endpoint root `GET /` (évite le 404 vide en prod)
+- Endpoint root `GET /`
 - Endpoint `GET /event/2026`
 - Handler 404 JSON uniforme (`code: NOT_FOUND`)
 
-### 2) Sécurité runtime
+### 2) Compatibilité Vercel (fix 404)
+
+- `api/index.ts` exporte l’app Express pour Vercel Serverless Functions
+- `api/[...all].ts` active le fallback catch-all
+- `vercel.json` réécrit `/(.*)` vers `/api/$1`
+
+Résultat: les routes `/`, `/event/2026`, `/trpc/*` ne tombent plus sur la page 404 plateforme.
+
+### 3) Sécurité runtime
 
 - `helmet()` activé
 - `express-rate-limit` activé (fenêtre 10 min)
 - `x-powered-by` désactivé
 
-### 3) tRPC branché côté Express
+### 4) tRPC branché côté Express
 
 - Route `/trpc`
 - Router `health` public
 - Router `adminPing` protégé par rôle `ADMIN+`
 - Context tRPC issu des headers (base pour future session DB)
 
-### 4) RBAC et briques sécurité existantes
+### 5) RBAC et briques sécurité existantes
 
 - Hiérarchie `USER(1) -> SUPER_ADMIN(9)` + `hasPermission`
 - Vote anti-spam: hash SHA256(ip + salt) + 1 vote / 10 min
 - Invitation: génération token, digest SHA256, expiration
 
-### 5) Schéma Drizzle
+### 6) Schéma Drizzle
 
 - `votes`
 - `vote_aggregates`
 - `social_tracking`
 
-## Démarrage
+## Démarrage local
 
 ```bash
 npm install
@@ -70,10 +78,12 @@ Couvre:
 - Vote anti-spam
 - Runtime Express (`/` et 404)
 
-## Prochaine étape recommandée
+## Vérification Vercel importante
 
-- Session persistée DB + cookies signés + rotation
-- Onboarding candidat complet (`candidate_applications`, approval admin)
-- Audit logs complets + monitoring + alerting
-- SEO SSR/OG pour `/share/:candidateId/:assetId`
-- Upload media + watermark automatique
+Si Vercel pointe encore sur un commit ancien (`2783bec Initialize repository`), il faut:
+
+1. pousser cette branche avec les nouveaux commits,
+2. configurer le projet Vercel pour builder cette branche (ou merger sur `main`),
+3. relancer un déploiement.
+
+Sinon Vercel continue d’afficher la 404 plateforme, même si le code est corrigé localement.
