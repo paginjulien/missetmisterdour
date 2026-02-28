@@ -101,3 +101,13 @@ Le log fourni montre que Vercel build le commit ancien `2783bec` et exécute `vi
 Cette révision ajoute `vite` + `build` script + `index.html` racine pour éviter l'erreur `vite: command not found` si ce preset est actif.
 
 Action requise côté Vercel: pointer la production branch sur le commit récent (ou merger vers `main`) puis redeployer.
+
+
+## Correctif `ERR_MODULE_NOT_FOUND` Vercel
+
+Le point bloquant provenait de `api/index.ts` qui importait `../apps/server/src/app` (chemin non résolu dans le bundle serverless final).
+
+Correctif appliqué:
+- entrée Vercel `api/index.ts` rendue autonome (plus d'import cross-folder vers `apps/server/src/*`)
+- endpoints essentiels servis directement (`/api/health`, `/event/2026`, `/trpc/health`)
+- test ajouté pour valider que l'entrypoint Vercel se charge correctement.
